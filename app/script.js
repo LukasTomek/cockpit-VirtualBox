@@ -24,7 +24,7 @@ function listarMaquinasVirtuais(lastUUID) {
             };
             li.id = UUID;
             // Verify that the information was found correctly
-            if (nomeVM !== 'Não encontrado' && estadoVM !== 'Não encontrado') {
+            if (nomeVM !== 'Not found' && estadoVM !== 'Not found') {
                 // Add the element for the virtual machine name and status
                 var nomeNomeElemento = document.createElement('span');
                 var nomeEstadoElemento = document.createElement('span');
