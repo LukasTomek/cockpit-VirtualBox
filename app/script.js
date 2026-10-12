@@ -337,7 +337,7 @@ function newVirtualMachine(UUID) {
     nameInput.value = 'VirtualBoxMachine';
     form.appendChild(NameElemento);
     form.appendChild(nameInput);
-/*
+ /*
     var br = document.createElement('br');
     form.appendChild(br);
     var br = document.createElement('br');
@@ -744,11 +744,17 @@ function showSettings(UUID){
     buttonNetwork.onclick = function() {
         showNetworks(UUID);
     };
+    var buttonRemoteDisplay = document.createElement('button');
+    buttonRemoteDisplay.textContent = "Remote Display";
+    buttonRemoteDisplay.setAttribute('class', 'action-buttons');
+    buttonRemoteDisplay.onclick = function() {
+        showRemoteDisplay(UUID);
+    };
     var buttonUSB = document.createElement('button');
     buttonUSB.textContent = "USB";
     buttonUSB.setAttribute('class', 'action-buttons');
     buttonUSB.onclick = function() {
-        alert(UUID);
+        showUSB(UUID);
     };
     var buttonFolders = document.createElement('button');
     buttonFolders.textContent = "Folders";
@@ -761,6 +767,7 @@ function showSettings(UUID){
     li.append(buttonSystem);
     li.append(buttonStorage);
     li.append(buttonNetwork);
+    li.append(buttonRemoteDisplay);
     li.append(buttonUSB);
     li.append(buttonFolders);
 
@@ -771,6 +778,229 @@ function showSettings(UUID){
     div.id = "settingsInfo";
     li.appendChild(div);
     ul.appendChild(li);
+}
+
+function normalizeVMValue(value) {
+    if (value === undefined || value === null || value === 'Not found') {
+        return false;
+    }
+    value = String(value).trim().toLowerCase();
+    return value === 'on' || value === 'true' || value === '1' || value === 'enabled';
+}
+
+function extractVMSetting(info, keys) {
+    if (!info || !keys || !keys.length) {
+        return 'Not found';
+    }
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var regex = new RegExp('(?:^|\\n)' + key + '=\\s*"?([^"\\n]+)"?', 'i');
+        var match = info.match(regex);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+        var altRegex = new RegExp('(?:^|\\n)' + key + ':\\s*"?([^"\\n]+)"?', 'i');
+        var altMatch = info.match(altRegex);
+        if (altMatch && altMatch[1]) {
+            return altMatch[1].trim();
+        }
+    }
+    return 'Not found';
+}
+
+function showRemoteDisplay(UUID){
+    var div = document.getElementById('settingsInfo');
+    div.innerHTML = '';
+
+    var form = document.createElement('form');
+    form.id = 'remoteDisplayForm';
+
+    cockpit.spawn(['VBoxManage', 'showvminfo', UUID, '--machinereadable']).done(function(data) {
+        var currentState = normalizeVMValue(extractVMSetting(data, ['vrde', 'vrdeenabled', 'VRDE', 'VRDEEnabled'])) ? 'on' : 'off';
+        var currentPort = extractVMSetting(data, ['vrdeport', 'VRDEPort']);
+        if (currentPort === 'Not found') {
+            currentPort = '3389';
+        }
+        var currentAddress = extractVMSetting(data, ['vrdeaddress', 'VRDEAddress']);
+        if (currentAddress === 'Not found') {
+            currentAddress = '127.0.0.1';
+        }
+
+        var label = document.createElement('label');
+        var enabledInput = document.createElement('input');
+        enabledInput.type = 'checkbox';
+        enabledInput.checked = currentState === 'on';
+        label.appendChild(enabledInput);
+        label.appendChild(document.createTextNode(' Enable Remote Display'));
+        form.appendChild(label);
+
+        var br = document.createElement('br');
+        form.appendChild(br);
+
+        var portLabel = document.createElement('span');
+        portLabel.textContent = 'Port: ';
+        var portInput = document.createElement('input');
+        portInput.type = 'number';
+        portInput.value = currentPort;
+        portInput.min = '1';
+        portInput.max = '65535';
+        form.appendChild(portLabel);
+        form.appendChild(portInput);
+
+        var br2 = document.createElement('br');
+        form.appendChild(br2);
+
+        var addressLabel = document.createElement('span');
+        addressLabel.textContent = 'Address: ';
+        var addressInput = document.createElement('input');
+        addressInput.type = 'text';
+        addressInput.value = currentAddress;
+        form.appendChild(addressLabel);
+        form.appendChild(addressInput);
+
+        var br3 = document.createElement('br');
+        form.appendChild(br3);
+
+        var buttonCancel = document.createElement('button');
+        buttonCancel.type = 'button';
+        buttonCancel.textContent = 'Cancel';
+        buttonCancel.onclick = function() {
+            showRemoteDisplay(UUID);
+        };
+
+        var buttonSave = document.createElement('button');
+        buttonSave.type = 'button';
+        buttonSave.textContent = 'OK';
+        buttonSave.onclick = function() {
+            var options = ['VBoxManage', 'modifyvm', UUID];
+            var targetState = enabledInput.checked ? 'on' : 'off';
+            if (currentState !== targetState) {
+                options.push('--vrde', targetState);
+            }
+            if (portInput.value && portInput.value !== currentPort) {
+                options.push('--vrdeport', portInput.value);
+            }
+            if (addressInput.value && addressInput.value !== currentAddress) {
+                options.push('--vrdeaddress', addressInput.value);
+            }
+            if (options.length > 3) {
+                cockpit.spawn(options).done(function() {
+                    showRemoteDisplay(UUID);
+                }).fail(function(error) {
+                    console.error('Error updating remote display:', error);
+                    showRemoteDisplay(UUID);
+                });
+            } else {
+                showRemoteDisplay(UUID);
+            }
+        };
+
+        form.appendChild(buttonCancel);
+        form.appendChild(buttonSave);
+        div.appendChild(form);
+    }).fail(function(error) {
+        div.innerHTML = '<p>Error retrieving remote display configuration: ' + error + '</p>';
+    });
+}
+
+function showUSB(UUID){
+    var div = document.getElementById('settingsInfo');
+    div.innerHTML = '';
+
+    var form = document.createElement('form');
+    form.id = 'usbForm';
+
+    cockpit.spawn(['VBoxManage', 'showvminfo', UUID, '--machinereadable']).done(function(data) {
+        var usbEnabled = normalizeVMValue(extractVMSetting(data, ['usb', 'usbenabled', 'USB', 'USBEnabled']));
+        var controllerNames = [];
+        var deviceFilters = [];
+        var output = data.split('\n');
+        output.forEach(function(line) {
+            if (/usbcontrollername\d*/i.test(line)) {
+                var value = line.split('=')[1];
+                if (value) {
+                    controllerNames.push(value.replace(/"/g, '').trim());
+                }
+            }
+            if (/usb.*filter/i.test(line) || /devicefilter/i.test(line)) {
+                var value = line.split('=')[1];
+                if (value) {
+                    deviceFilters.push(value.replace(/"/g, '').trim());
+                }
+            }
+        });
+
+        var label = document.createElement('label');
+        var enabledInput = document.createElement('input');
+        enabledInput.type = 'checkbox';
+        enabledInput.checked = usbEnabled;
+        label.appendChild(enabledInput);
+        label.appendChild(document.createTextNode(' Enable USB'));
+        form.appendChild(label);
+
+        var br = document.createElement('br');
+        form.appendChild(br);
+
+        if (controllerNames.length > 0) {
+            var controllerTitle = document.createElement('strong');
+            controllerTitle.textContent = 'USB controllers:';
+            form.appendChild(controllerTitle);
+            var controllerList = document.createElement('ul');
+            controllerNames.forEach(function(controllerName) {
+                var item = document.createElement('li');
+                item.textContent = controllerName;
+                controllerList.appendChild(item);
+            });
+            form.appendChild(controllerList);
+            form.appendChild(document.createElement('br'));
+        }
+
+        if (deviceFilters.length > 0) {
+            var filterTitle = document.createElement('strong');
+            filterTitle.textContent = 'USB device filters:';
+            form.appendChild(filterTitle);
+            var filterList = document.createElement('ul');
+            deviceFilters.forEach(function(filter) {
+                var item = document.createElement('li');
+                item.textContent = filter;
+                filterList.appendChild(item);
+            });
+            form.appendChild(filterList);
+        } else {
+            var noneText = document.createElement('span');
+            noneText.textContent = 'No USB device filters found for this VM.';
+            form.appendChild(noneText);
+        }
+
+        var br2 = document.createElement('br');
+        form.appendChild(br2);
+
+        var buttonCancel = document.createElement('button');
+        buttonCancel.type = 'button';
+        buttonCancel.textContent = 'Cancel';
+        buttonCancel.onclick = function() {
+            showUSB(UUID);
+        };
+
+        var buttonSave = document.createElement('button');
+        buttonSave.type = 'button';
+        buttonSave.textContent = 'OK';
+        buttonSave.onclick = function() {
+            var options = ['VBoxManage', 'modifyvm', UUID, '--usb', enabledInput.checked ? 'on' : 'off'];
+            cockpit.spawn(options).done(function() {
+                showUSB(UUID);
+            }).fail(function(error) {
+                console.error('Error updating USB settings:', error);
+                showUSB(UUID);
+            });
+        };
+
+        form.appendChild(buttonCancel);
+        form.appendChild(buttonSave);
+        div.appendChild(form);
+    }).fail(function(error) {
+        div.innerHTML = '<p>Error retrieving USB settings: ' + error + '</p>';
+    });
 }
 
 function showGeneral(UUID){
@@ -1409,7 +1639,7 @@ function addDisk(UUID, storageControllerName) {
 }
 
 
-function showNetworks(){
+function showNetworks(UUID){
     var div = document.getElementById('settingsInfo');
     div.innerHTML = ''; // Clear the previous content
 
