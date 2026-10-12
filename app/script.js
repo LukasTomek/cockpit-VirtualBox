@@ -1,20 +1,20 @@
-// Função para listar as máquinas virtuais do VirtualBox
+// Function to list the virtual machines in VirtualBox
 function listarMaquinasVirtuais(lastUUID) {
-    // Executar o comando 'vboxmanage showvminfo' usando a API do Cockpit
+    // Run the 'vboxmanage list vms -l' command using the Cockpit API
     cockpit.spawn(['vboxmanage', 'list', 'vms', '-l']).done(function(data) {
         var vmList = data.split('\n\n');
 
-        // Limpar a lista anterior
+        // Clear the previous list
         var ul = document.getElementById('vmList');
         ul.innerHTML = '';
 
-        // Adicionar os nomes e status das máquinas virtuais à lista
+        // Add the names and status of the virtual machines to the list
         vmList.forEach(function(vm) {
             var li = document.createElement('li');
             li.classList.add('vm-item');
-            // Extrair o nome da máquina virtual
+            // Extract the virtual machine name
             var nomeVM = extrairInfoVM(vm, 'Name');
-            // Extrair o estado da máquina virtual
+            // Extract the virtual machine status
             var estadoVM = extrairInfoVM(vm, 'State');
             var resultado = dividirEstado(estadoVM);
             var UUID = extrairInfoVM(vm, 'UUID');
@@ -23,9 +23,9 @@ function listarMaquinasVirtuais(lastUUID) {
                 ShowMachineClick(UUID);
             };
             li.id = UUID;
-            // Verificar se as informações foram encontradas corretamente
+            // Verify that the information was found correctly
             if (nomeVM !== 'Não encontrado' && estadoVM !== 'Não encontrado') {
-                // Adicionar elemento para o nome e estado da máquina virtual
+                // Add the element for the virtual machine name and status
                 var nomeNomeElemento = document.createElement('span');
                 var nomeEstadoElemento = document.createElement('span');
 
@@ -36,14 +36,14 @@ function listarMaquinasVirtuais(lastUUID) {
                 nomeEstadoElemento.classList.add('vm-span');
                 
                 adicionarClassState(resultado, li);
-                // Adicionar elemento à lista
+                // Add the element to the list
                 li.appendChild(nomeNomeElemento);
                 li.appendChild(nomeEstadoElemento);
                 ul.appendChild(li);
             }
         });
     }).fail(function(error) {
-        // Exibir mensagem de erro se houver falha na execução do comando
+        // Display an error message if command execution fails
         console.error('Error listing virtual machines::', error);
         var ul = document.getElementById('vmList');
         ul.innerHTML = '<li class="vm-item">Error listing virtual machines:: ' + error + '</li>';
@@ -57,10 +57,10 @@ function ShowMachineClick(UUID) {
     items.forEach(function (element) {
         element.classList.remove('selected');
     });
-    // Executar comando VBoxManage showvminfo
+    // Run the VBoxManage showvminfo command
     cockpit.spawn(['VBoxManage', 'showvminfo', UUID, "--machinereadable"]).done(function(data) {
         var vmList = data.split('\n\n');
-        // Limpar a lista anterior
+        // Clear the list
         var ul = document.getElementById('vmInfo');
         ul.innerHTML = '';
         var li = document.createElement('li');
@@ -267,9 +267,9 @@ function ShowMachineClick(UUID) {
             ul.appendChild(lidiv);
         });
     }).fail(function(error) {
-        // Exibir mensagem de erro se houver falha na execução do comando
+        // Display an error message if retrieving virtual machine details fails
         var ul = document.getElementById('vmList');
-        ul.innerHTML = '<li class="vm-item">Erro ao listar as informações virtuais: ' + error + '</li>';
+        ul.innerHTML = '<li class="vm-item">Error retrieving virtual machine information: ' + error + '</li>';
     });
 }
 
@@ -279,7 +279,7 @@ function shutdownVM(UUID) {
         cockpit.spawn(['VBoxManage', 'controlvm', UUID, 'poweroff']).done(function(data) {
             listarMaquinasVirtuais(UUID);
         }).fail(function(error) {
-            console.error("Erro ao desligar a VM:", error);
+            console.error("Error shutting down the VM:", error);
         });
     }
 }
@@ -290,7 +290,7 @@ function removeVirtualMachine(UUID){
         cockpit.spawn(['VBoxManage', 'unregistervm', UUID, "--delete"]).done(function(data) {
             listarMaquinasVirtuais(UUID);
         }).fail(function(error) {
-            console.error("Erro ao criar VM:", error);
+            console.error("Error creating VM:", error);
         });
     }
 }
@@ -481,7 +481,7 @@ function editDiscs(){
     form.appendChild(br);
     var br = document.createElement('br');
     form.appendChild(br);
-    //conteudo grupo 1
+    //content of group 1
 
     var groupElemento = document.createElement('div');
     groupElemento.id = 'group1';
@@ -534,7 +534,7 @@ function editDiscs(){
     form.appendChild(diskLabel);
     var br = document.createElement('br');
     form.appendChild(br);
-    //conteudo grupo 2
+    //content group 2
 
     var groupElemento = document.createElement('div');
     groupElemento.id = 'group2';
@@ -629,11 +629,11 @@ function finishCreation(createNewVBoxID){
         cockpit.spawn(command).done(function(data) {
             console.log(data);
         }).fail(function(error) {
-            console.error("Erro ao modifyvm VM:", error);
+            console.error("Error modifying VM:", error);
         });
         ShowMachineClick(newUUID);
     }).fail(function(error) {
-        console.error("Erro ao createvm VM:", error);
+        console.error("Error creating VM:", error);
     });
     //createVirtualDisk(name.value, sizedisk.value, folderdisk.value);
     //addStorageController(newUUID, 'on')
@@ -656,7 +656,7 @@ function createVirtualDisk(name ,sizedisk, folderdisk){
             return diskID;
         } 
     }).fail(function(error) {
-        console.error("Erro ao criar DISCO:", error);
+        console.error("Error creating DISK:", error);
     });
 }
 
@@ -673,7 +673,7 @@ function addStorageController(UUID, state =  'off'){
     cockpit.spawn([command]).done(function(data) {
         console.log(data);
     }).fail(function(error) {
-        console.error("Erro ao criar storagectl:", error);
+        console.error("Error creating storagectl:", error);
     });
 }
 function attachDisk(UUID, diskFilePath){
@@ -693,7 +693,7 @@ function attachDisk(UUID, diskFilePath){
             }
         });
     }).fail(function(error) {
-        console.error("Erro ao criar VM:", error);
+        console.error("Error creating VM:", error);
     });
 }
 
@@ -873,9 +873,9 @@ function showGeneral(UUID){
             }
         });
     }).fail(function(error) {
-        // Exibir mensagem de erro se houver falha na execução do comando
+        // Display an error message if retrieving virtual machine details fails
         var ul = document.getElementById('vmList');
-        ul.innerHTML = '<li class="vm-item">Erro ao listar as informações virtuais: ' + error + '</li>';
+        ul.innerHTML = '<li class="vm-item">Error retrieving virtual machine information: ' + error + '</li>';
     });
     div.appendChild(form);
 }
@@ -983,95 +983,95 @@ function showSystem(UUID){
                     }else{
                         showSystem(UUID);
                     }    var div = document.getElementById('settingsInfo');
-                    div.innerHTML = ''; // Limpa o conteúdo anterior
+                    div.innerHTML = ''; // Clear the previous content
                 
-                    // Cria um formulário
+                    // Create a form
                     var form = document.createElement('form');
                 
-                    // Cria um campo de entrada para o comando
+                    // Create an input field for the command
                     var input = document.createElement('input');
                     input.type = 'text';
-                    input.placeholder = 'Digite seu comando aqui';
-                    input.id = 'commandInput'; // ID para acessar o campo mais tarde
+                    input.placeholder = 'Type your command here';
+                    input.id = 'commandInput'; // ID for later access
                     form.appendChild(input);
                 
-                    // Cria um botão para executar o comando
+                    // Create a button to execute the command
                     var button = document.createElement('button');
-                    button.type = 'button'; // Tipo 'button' para evitar o envio do formulário
-                    button.textContent = 'Executar Comando';
+                    button.type = 'button'; // Type 'button' to avoid form submission
+                    button.textContent = 'Run Command';
                     
-                    // Adiciona um evento de clique ao botão
+                    // Add a click event to the button
                     button.addEventListener('click', function() {
-                        var command = input.value; // Obtém o comando do campo de entrada
+                        var command = input.value; // Get the command from the input field
                         if (command) {
-                            // Executa o comando usando cockpit.spawn
+                            // Execute the command using cockpit.spawn
                             cockpit.spawn(['bash', '-c', command]).then(function(output) {
-                                console.log('Saída do comando:', output); // Exibe a saída no console
+                                console.log('Command output:', output); // Display the output in the console
                             }).catch(function(error) {
-                                console.error('Erro ao executar o comando:', error); // Exibe erro no console
+                                console.error('Error executing the command:', error); // Display the error in the console
                             });
                         } else {
-                            console.warn('Por favor, digite um comando.'); // Aviso se o campo estiver vazio
+                            console.warn('Please type a command.'); // Warning if the field is empty
                         }
                     });
                 
                     form.appendChild(button);
                 
-                    // Cria um botão para abrir o gerenciador de arquivos
+                    // Create a button to open the file manager
                     var dirButton = document.createElement('button');
-                    dirButton.type = 'button'; // Tipo 'button' para evitar o envio do formulário
-                    dirButton.textContent = 'Navegar Diretórios';
+                    dirButton.type = 'button'; // Type 'button' to avoid form submission
+                    dirButton.textContent = 'Browse Directories';
                 
-                    // Adiciona um evento de clique ao botão do diretório
+                    // Add a click event to the directory button
                     dirButton.addEventListener('click', function() {
-                        navigateDirectories('/'); // Inicia a navegação a partir da raiz
+                        navigateDirectories('/'); // Start navigation from the root
                     });
                 
                     form.appendChild(dirButton);
-                    div.appendChild(form); // Adiciona o formulário à div
+                    div.appendChild(form); // Add the form to the div
                 };
                 form.appendChild(buttonCancel);
                 form.appendChild(buttonSave);
             }
         });
     }).fail(function(error) {
-        // Exibir mensagem de erro se houver falha na execução do comando
+        // Display an error message if retrieving virtual machine details fails
         var ul = document.getElementById('vmList');
-        ul.innerHTML = '<li class="vm-item">Erro ao listar as informações virtuais: ' + error + '</li>';
+        ul.innerHTML = '<li class="vm-item">Error retrieving virtual machine information: ' + error + '</li>';
     });
     div.appendChild(form);
 }
 function addController(vmId) {
     var detailsContainer = document.querySelector('.details-container');
-    detailsContainer.innerHTML = ''; // Limpa o conteúdo anterior
+    detailsContainer.innerHTML = ''; // Clear the previous content
 
-    // Criação do formulário
+    // Create the form
     var form = document.createElement('form');
     form.className = 'add-controller-form';
 
-    // Campo para o nome do controlador
+    // Field for the controller name
     var nameLabel = document.createElement('label');
-    nameLabel.textContent = 'Nome do Controlador:';
+    nameLabel.textContent = 'Controller Name:';
     var nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.id = 'controllerName';
-    nameInput.required = true; // Torna o campo obrigatório
+    nameInput.required = true; // Make the field mandatory
     form.appendChild(nameLabel);
     form.appendChild(nameInput);
     form.appendChild(document.createElement('br'));
 
-    // Campo para selecionar o tipo de controlador
+    // Field to select the controller type
     var typeLabel = document.createElement('label');
-    typeLabel.textContent = 'Tipo de Controlador:';
+    typeLabel.textContent = 'Controller Type:';
     var typeSelect = document.createElement('select');
     typeSelect.id = 'controllerType';
     
-    // Adicionando opções ao select
+    // Add options to the select
     var types = ['sata', 'ide', 'scsi', 'usb', 'pci'];
     types.forEach(function(type) {
         var option = document.createElement('option');
         option.value = type;
-        option.textContent = type.charAt(0).toUpperCase() + type.slice(1); // Capitaliza a primeira letra
+        option.textContent = type.charAt(0).toUpperCase() + type.slice(1); // Capitalize the first letter
         typeSelect.appendChild(option);
     });
     
@@ -1079,18 +1079,18 @@ function addController(vmId) {
     form.appendChild(typeSelect);
     form.appendChild(document.createElement('br'));
 
-    // Campo para selecionar se é bootável
+    // Field to select whether it is bootable
     var bootableLabel = document.createElement('label');
-    bootableLabel.textContent = 'Bootável:';
+    bootableLabel.textContent = 'Bootable:';
     var bootableSelect = document.createElement('select');
     bootableSelect.id = 'bootableOption';
     
-    // Adicionando opções ao select
+    // Add options to the select
     var bootableOptions = ['on', 'off'];
     bootableOptions.forEach(function(option) {
         var bootOption = document.createElement('option');
         bootOption.value = option;
-        bootOption.textContent = option.charAt(0).toUpperCase() + option.slice(1); // Capitaliza a primeira letra
+        bootOption.textContent = option.charAt(0).toUpperCase() + option.slice(1); // Capitalize the first letter
         bootableSelect.appendChild(bootOption);
     });
     
@@ -1098,27 +1098,27 @@ function addController(vmId) {
     form.appendChild(bootableSelect);
     form.appendChild(document.createElement('br'));
 
-    // Botão para salvar
+    // Save button
     var saveButton = document.createElement('button');
-    saveButton.type = 'button'; // Não envia o formulário
-    saveButton.textContent = 'Salvar';
+    saveButton.type = 'button'; // Do not submit the form
+    saveButton.textContent = 'Save';
     saveButton.onclick = function() {
         var controllerName = nameInput.value;
         var controllerType = typeSelect.value;
         var bootable = bootableSelect.value;
 
-        // Comando a ser executado
+        // Command to execute
         var command = `VBoxManage storagectl ${vmId} --name ${controllerName} --add ${controllerType} --bootable ${bootable}`;
-        console.log("Comando a ser executado:", command);
+        console.log("Command to be executed:", command);
         
-        // Executa o comando usando cockpit.spawn
+        // Execute the command using cockpit.spawn
         cockpit.spawn(command.split(' ')).done(function() {
-            alert("Controlador adicionado com sucesso: " + controllerName);
+            alert("Controller added successfully: " + controllerName);
             showStorage(vmId);
-            // Aqui você pode adicionar lógica para atualizar a interface, se necessário
+            // Here you can add logic to update the interface if needed
         }).fail(function(error) {
-            alert("Erro ao adicionar controlador: " + error);
-            console.error("Erro:", error);
+            alert("Error adding controller: " + error);
+            console.error("Error:", error);
         });
     };
     
@@ -1127,23 +1127,23 @@ function addController(vmId) {
 }
 
 function removeController(vmId, controllerName) {
-    // Confirmação antes de remover
-    if (confirm("Tem certeza que deseja remover o controlador: " + controllerName + "?")) {
-        // Comando a ser executado
+    // Confirmation before removing
+    if (confirm("Are you sure you want to remove the controller: " + controllerName + "?")) {
+        // Command to execute
         var command = `VBoxManage storagectl ${vmId} --name ${controllerName} --remove`;
-        console.log("Comando a ser executado:", command);
+        console.log("Command to be executed:", command);
         
-        // Tente dividir o comando de forma mais robusta
+        // Try to split the command more robustly
         var commandArray = command.split(/\s+/);
-        console.log("Array de comando:", commandArray);
+        console.log("Command array:", commandArray);
         
         cockpit.spawn(commandArray).done(function(data) {
-            alert("Controlador removido com sucesso: " + controllerName);
-            showStorage(vmId); // Atualiza a exibição após a remoção
+            alert("Controller removed successfully: " + controllerName);
+            showStorage(vmId); // Refresh the display after removal
         }).fail(function(error) {
-            alert("Erro ao remover controlador: " + error.message);
-            console.error("Erro:", error);
-            console.error("Saída do comando:", error.data); // Captura a saída do comando
+            alert("Error removing controller: " + error.message);
+            console.error("Error:", error);
+            console.error("Command output:", error.data); // Capture the command output
         });
     }
 }
@@ -1152,21 +1152,21 @@ function removeController(vmId, controllerName) {
 
 function showStorage(UUID) {
     var div = document.getElementById('settingsInfo');
-    div.innerHTML = ''; // Limpa o conteúdo anterior
+    div.innerHTML = ''; // Clear the previous content
 
-    // Criação de um contêiner flexível
+    // Create a flexible container
     var container = document.createElement('div');
     container.className = 'main-container';
 
-    // Contêiner para os controladores
+    // Container for controllers
     var storageContainer = document.createElement('div');
     storageContainer.className = 'storage-container';
 
-    // Contêiner para os detalhes
+    // Container for details
     var detailsContainer = document.createElement('div');
     detailsContainer.className = 'details-container';
 
-    // Adiciona os contêineres ao contêiner principal
+    // Add the containers to the main container
     container.appendChild(storageContainer);
     container.appendChild(detailsContainer);
     div.appendChild(container);
@@ -1196,13 +1196,13 @@ function showStorage(UUID) {
                 currentController.className = 'storage-controller';
                 currentController.innerHTML = "<strong>Controller: " + storagecontrollername + "</strong><br>";
 
-                // Botões para adicionar e remover discos
+                // Buttons to add and remove disks
                 var addButton = document.createElement('button');
                 addButton.textContent = '+';
                 addButton.onclick = function() {
-                    // Lógica para adicionar um novo disco
+                    // Logic to add a new disk
                     addDisk(UUID, storagecontrollername);
-                    alert("Adicionar novo disco ao controlador: " + storagecontrollername);
+                    alert("Add a new disk to the controller: " + storagecontrollername);
                 };
                 currentController.appendChild(addButton);
 
@@ -1212,42 +1212,42 @@ function showStorage(UUID) {
                     removeController(UUID, storagecontrollername);
                 };
                 currentController.appendChild(removeButton);
-            } else if (line.startsWith('\"IDE-') || line.startsWith('\"SATA-')) {
-                if (line.endsWith('.iso\"') || line.endsWith('.vdi\"')) {
+            } else if (line.startsWith('"IDE-') || line.startsWith('"SATA-')) {
+                if (line.endsWith('.iso"') || line.endsWith('.vdi"')) {
                     var fileItem = document.createElement('div');
                     fileItem.className = 'storage-item';
-                    var fileName = line.split('/').pop(); // Nome do arquivo
-                    var filePath = line.split('=')[1].trim().replace(/\"/g, ''); // Caminho completo do arquivo
+                    var fileName = line.split('/').pop(); // File name
+                    var filePath = line.split('=')[1].trim().replace(/\"/g, ''); // Full file path
 
                     fileItem.textContent = fileName;
 
-                    // Adiciona evento de clique para mostrar detalhes do item
+                    // Add a click event to show item details
                     fileItem.onclick = function() {
-                        detailsContainer.innerHTML = "<strong>Detalhes do Item:</strong><br>" +
-                            "Nome: " + fileName + "<br>" +
-                            "Caminho: <input type='text' id='diskPath' value='" + filePath + "' style='width: 100%;'/>" +
-                            "<br><button id='saveButton'>Salvar</button>";
+                        detailsContainer.innerHTML = "<strong>Item Details:</strong><br>" +
+                            "Name: " + fileName + "<br>" +
+                            "Path: <input type='text' id='diskPath' value='" + filePath + "' style='width: 100%;'/>" +
+                            "<br><button id='saveButton'>Save</button>";
 
-                        // Se for um arquivo .vdi, exibir tamanho
+                        // If it is a .vdi file, show size
                         if (fileName.endsWith('.vdi')) {
-                            // Aqui você pode adicionar lógica para obter o tamanho do disco
-                            var currentSize = "10GB"; // Exemplo de tamanho atual
-                            var virtualSize = "20GB"; // Exemplo de tamanho virtual
-                            detailsContainer.innerHTML += "<br>Tamanho Atual: " + currentSize + "<br>Tamanho Virtual: " + virtualSize;
+                            // Here you can add logic to get the disk size
+                            var currentSize = "10GB"; // Example current size
+                            var virtualSize = "20GB"; // Example virtual size
+                            detailsContainer.innerHTML += "<br>Current Size: " + currentSize + "<br>Virtual Size: " + virtualSize;
                         }
 
-                        // Adiciona evento ao botão "Salvar"
+                        // Add a click event to the Save button
                         document.getElementById('saveButton').onclick = function() {
                             var newPath = document.getElementById('diskPath').value;
-                            // Aqui você pode adicionar a lógica para salvar o novo caminho
-                            console.log("Novo caminho salvo:", newPath);
-                            alert("Caminho salvo: " + newPath); // Exemplo de feedback
+                            // Here you can add logic to save the new path
+                            console.log("New path saved:", newPath);
+                            alert("Path saved: " + newPath); // Example feedback
                         };
                     };
 
                     currentController.appendChild(fileItem);
-                } else if (line.endsWith('none\"')) {
-                    // Se não houver disco, você pode adicionar uma mensagem ou simplesmente ignorar
+                } else if (line.endsWith('none"')) {
+                    // If there is no disk, you can add a message or simply ignore it
                 }
             }
         });
@@ -1256,11 +1256,11 @@ function showStorage(UUID) {
             storageContainer.appendChild(currentController);
         }
 
-        // Sempre exibe o botão para adicionar um controlador
+        // Always display the button to add a controller
         var addControllerButton = document.createElement('button');
-        addControllerButton.textContent = 'Add Controler';
+        addControllerButton.textContent = 'Add Controller';
         addControllerButton.onclick = function() {
-            addController(UUID); // Chama a função com o UUID quando o botão é clicado
+            addController(UUID); // Calls the function with the UUID when the button is clicked
         };
         storageContainer.appendChild(addControllerButton);
 
@@ -1269,33 +1269,33 @@ function showStorage(UUID) {
 
 function addDisk(UUID, storageControllerName) {
     var detailsContainer = document.querySelector('.details-container');
-    detailsContainer.innerHTML = ''; // Limpa o conteúdo anterior
+    detailsContainer.innerHTML = ''; // Clear the previous content
 
-    // Criação do formulário
+    // Create the form
     var form = document.createElement('form');
     form.className = 'add-disk-form';
 
-    // Campo para o caminho do disco
+    // Disk path field
     var diskLabel = document.createElement('label');
-    diskLabel.textContent = 'Caminho do Disco (.iso ou .vdi):';
+    diskLabel.textContent = 'Disk Path (.iso or .vdi):';
     var diskInput = document.createElement('input');
     diskInput.type = 'text';
     diskInput.id = 'diskPath';
-    diskInput.required = true; // Torna o campo obrigatório
+    diskInput.required = true; // Make the field mandatory
     form.appendChild(diskLabel);
     form.appendChild(diskInput);
     form.appendChild(document.createElement('br'));
-    // Campo para selecionar a porta
+    // Port field
     var portLabel = document.createElement('label');
-    portLabel.textContent = 'Porta:';
+    portLabel.textContent = 'Port:';
     var portSelect = document.createElement('select');
     portSelect.id = 'diskPort';
     
-    // Adicionando opções ao select (exemplo de 0 a 3)
+    // Add options to the select
     for (var i = 0; i < 4; i++) {
         var option = document.createElement('option');
         option.value = i;
-        option.textContent = i; // Porta como número
+        option.textContent = i; // Port as a number
         portSelect.appendChild(option);
     }
     
@@ -1303,36 +1303,36 @@ function addDisk(UUID, storageControllerName) {
     form.appendChild(portSelect);
     form.appendChild(document.createElement('br'));
 
-    // Campo para selecionar o dispositivo
+    // Device field
     var deviceLabel = document.createElement('label');
-    deviceLabel.textContent = 'Dispositivo:';
+    deviceLabel.textContent = 'Device:';
     var deviceSelect = document.createElement('select');
     deviceSelect.id = 'diskDevice';
     
-    // Adicionando opções ao select
-    var devices = ['0', '1']; // Exemplo de dispositivos
+    // Add options to the select
+    var devices = ['0', '1']; // Example devices
     devices.forEach(function(device) {
         var option = document.createElement('option');
         option.value = device;
-        option.textContent = device; // Dispositivo como número
+        option.textContent = device; // Device as a number
         deviceSelect.appendChild(option);
     });
     
     form.appendChild(deviceLabel);
     form.appendChild(deviceSelect);
     form.appendChild(document.createElement('br'));
-    // Campo para selecionar o tipo de disco
+    // Disk type field
     var typeLabel = document.createElement('label');
-    typeLabel.textContent = 'Tipo de Disco:';
+    typeLabel.textContent = 'Disk Type:';
     var typeSelect = document.createElement('select');
     typeSelect.id = 'diskType';
     
-    // Adicionando opções ao select
+    // Add options to the select
     var types = ['dvddrive', 'hdd'];
     types.forEach(function(type) {
         var option = document.createElement('option');
         option.value = type;
-        option.textContent = type.charAt(0).toUpperCase() + type.slice(1); // Capitaliza a primeira letra
+        option.textContent = type.charAt(0).toUpperCase() + type.slice(1); // Capitalize the first letter
         typeSelect.appendChild(option);
     });
     
@@ -1340,66 +1340,66 @@ function addDisk(UUID, storageControllerName) {
     form.appendChild(typeSelect);
     form.appendChild(document.createElement('br'));
 
-    // Campo para o tamanho do disco (apenas para HDD)
+    // Disk size field (HDD only)
     var sizeLabel = document.createElement('label');
-    sizeLabel.textContent = 'Tamanho do Disco (MB):';
+    sizeLabel.textContent = 'Disk Size (MB):';
     var sizeInput = document.createElement('input');
     sizeInput.type = 'number';
     sizeInput.id = 'diskSize';
-    sizeInput.required = true; // Torna o campo obrigatório
+    sizeInput.required = true; // Make the field mandatory
     form.appendChild(sizeLabel);
     form.appendChild(sizeInput);
     form.appendChild(document.createElement('br'));
-    // Botão para salvar
+    // Save button
     var saveButton = document.createElement('button');
-    saveButton.type = 'button'; // Não envia o formulário
-    saveButton.textContent = 'Salvar';
+    saveButton.type = 'button'; // Do not submit the form
+    saveButton.textContent = 'Save';
     saveButton.onclick = function() {
         var diskPath = diskInput.value;
         var diskPort = portSelect.value;
         var diskDevice = deviceSelect.value;
         var diskType = typeSelect.value;
-        var diskSize = sizeInput.value; // Tamanho do disco
+        var diskSize = sizeInput.value; // Disk size
 
         if (diskType === 'dvddrive') {
-            // Comando para dvddrive
+            // Command for dvddrive
             var command = `VBoxManage storageattach ${UUID} --storagectl ${storageControllerName} --port ${diskPort} --device ${diskDevice} --type dvddrive --medium ${diskPath}`;
-            console.log("Comando a ser executado:", command);
+            console.log("Command to be executed:", command);
             
-            // Executa o comando
-            // Executa o comando usando cockpit.spawn
+            // Execute the command
+            // Execute the command using cockpit.spawn
             cockpit.spawn(command.split(' ')).done(function() {
-                alert("Disco adicionado com sucesso: " + diskPath);
+                alert("Disk added successfully: " + diskPath);
                 showStorage(UUID);
             }).fail(function(error) {
-                alert("Erro ao adicionar disco: " + error.message);
-                console.error("Erro:", error);
-                console.error("Saída do comando:", error.data); // Captura a saída do comando
+                alert("Error adding disk: " + error.message);
+                console.error("Error:", error);
+                console.error("Command output:", error.data); // Capture the command output
             });
         } else if (diskType === 'hdd') {
-            // Comando para criar o disco HDD
+            // Command to create the HDD disk
             var createCommand = `VBoxManage createmedium disk --filename "${diskPath}" --size ${diskSize}`;
-            console.log("Comando para criar disco HDD:", createCommand);
+            console.log("Command to create HDD disk:", createCommand);
             
-            // Executa o comando para criar o disco
+            // Execute the command to create the disk
             cockpit.spawn(createCommand.split(' ')).done(function() {
-                // Comando para anexar o disco HDD
+                // Command to attach the HDD disk
                 var attachCommand = `VBoxManage storageattach ${UUID} --storagectl ${storageControllerName} --port ${diskPort} --device ${diskDevice} --type hdd --medium "${diskPath}"`;
-                console.log("Comando a ser executado:", attachCommand);
+                console.log("Command to be executed:", attachCommand);
                 
-                // Executa o comando para anexar o disco
+                // Execute the command to attach the disk
                 cockpit.spawn(attachCommand.split(' ')).done(function() {
-                    alert("Disco HDD adicionado com sucesso: " + diskPath);
+                    alert("HDD disk added successfully: " + diskPath);
                     showStorage(UUID);
                 }).fail(function(error) {
-                    alert("Erro ao anexar disco HDD: " + error.message);
-                    console.error("Erro:", error);
-                    console.error("Saída do comando:", error.data); // Captura a saída do comando
+                    alert("Error attaching HDD disk: " + error.message);
+                    console.error("Error:", error);
+                    console.error("Command output:", error.data); // Capture the command output
                 });
             }).fail(function(error) {
-                alert("Erro ao criar disco HDD: " + error.message);
-                console.error("Erro:", error);
-                console.error("Saída do comando:", error.data); // Captura a saída do comando
+                alert("Error creating HDD disk: " + error.message);
+                console.error("Error:", error);
+                console.error("Command output:", error.data); // Capture the command output
             });
         }
     };
@@ -1411,63 +1411,63 @@ function addDisk(UUID, storageControllerName) {
 
 function showNetworks(){
     var div = document.getElementById('settingsInfo');
-    div.innerHTML = ''; // Limpa o conteúdo anterior
+    div.innerHTML = ''; // Clear the previous content
 
-    // Cria um formulário
+    // Create a form
     var form = document.createElement('form');
 
-    // Cria um campo de entrada para o comando
+    // Create an input field for the command
     var input = document.createElement('input');
     input.type = 'text';
-    input.placeholder = 'Digite seu comando aqui';
-    input.id = 'commandInput'; // ID para acessar o campo mais tarde
+    input.placeholder = 'Type your command here';
+    input.id = 'commandInput'; // ID for later access
     form.appendChild(input);
 
-    // Cria um botão para executar o comando
+    // Create a button to execute the command
     var button = document.createElement('button');
-    button.type = 'button'; // Tipo 'button' para evitar o envio do formulário
-    button.textContent = 'Executar Comando';
+    button.type = 'button'; // Type 'button' to avoid form submission
+    button.textContent = 'Run Command';
     
-    // Adiciona um evento de clique ao botão
+    // Add a click event to the button
     button.addEventListener('click', function() {
-        var command = input.value; // Obtém o comando do campo de entrada
+        var command = input.value; // Get the command from the input field
         if (command) {
-            // Executa o comando usando cockpit.spawn
+            // Execute the command using cockpit.spawn
             cockpit.spawn(['bash', '-c', command]).then(function(output) {
-                console.log('Saída do comando:', output); // Exibe a saída no console
+                console.log('Command output:', output); // Display the output in the console
             }).catch(function(error) {
-                console.error('Erro ao executar o comando:', error); // Exibe erro no console
+                console.error('Error executing the command:', error); // Display the error in the console
             });
         } else {
-            console.warn('Por favor, digite um comando.'); // Aviso se o campo estiver vazio
+            console.warn('Please type a command.'); // Warning if the field is empty
         }
     });
 
     form.appendChild(button);
 
-    // Cria um botão para abrir o gerenciador de arquivos
+    // Create a button to open the file manager
     var dirButton = document.createElement('button');
-    dirButton.type = 'button'; // Tipo 'button' para evitar o envio do formulário
-    dirButton.textContent = 'Navegar Diretórios';
+    dirButton.type = 'button'; // Type 'button' to avoid form submission
+    dirButton.textContent = 'Browse Directories';
 
-    // Adiciona um evento de clique ao botão do diretório
+    // Add a click event to the directory button
     dirButton.addEventListener('click', function() {
-        navigateDirectories('/'); // Inicia a navegação a partir da raiz
+        navigateDirectories('/'); // Start navigation from the root
     });
 
     form.appendChild(dirButton);
-    div.appendChild(form); // Adiciona o formulário à div
+    div.appendChild(form); // Add the form to the div
 }
 
 
-// Função para navegar pelos diretórios
+// Function to navigate directories
 function navigateDirectories(path) {
-    // Executa o comando para listar os diretórios e arquivos
+    // Run the command to list directories and files
     cockpit.spawn(['bash', '-c', `ls -l "${path}"`]).then(function(output) {
         var div = document.getElementById('settingsInfo');
-        div.innerHTML = ''; // Limpa o conteúdo anterior
+        div.innerHTML = ''; // Clear the previous content
 
-        // Exibe a lista de arquivos e diretórios
+        // Display the list of files and directories
         var files = output.split('\n');
         var list = document.createElement('ul');
 
@@ -1476,29 +1476,29 @@ function navigateDirectories(path) {
                 var listItem = document.createElement('li');
                 listItem.textContent = file;
 
-                // Adiciona um evento de clique para navegar para diretórios
+                // Add a click event to navigate into directories
                 listItem.addEventListener('click', function() {
                     var parts = file.split(/\s+/);
-                    var dirName = parts[parts.length - 1]; // Obtém o nome do diretório
-                    navigateDirectories(`${path}/${dirName}`); // Navega para o diretório selecionado
+                    var dirName = parts[parts.length - 1]; // Get the directory name
+                    navigateDirectories(`${path}/${dirName}`); // Navigate to the selected directory
                 });
 
                 list.appendChild(listItem);
             }
         });
 
-        // Adiciona um botão para voltar ao diretório anterior
+        // Add a button to go back to the parent directory
         var backButton = document.createElement('button');
-        backButton.textContent = 'Voltar';
+        backButton.textContent = 'Back';
         backButton.addEventListener('click', function() {
             var parentPath = path.split('/').slice(0, -1).join('/') || '/';
-            navigateDirectories(parentPath); // Volta ao diretório pai
+            navigateDirectories(parentPath); // Return to the parent directory
         });
 
         div.appendChild(backButton);
-        div.appendChild(list); // Adiciona a lista de arquivos e diretórios à div
+        div.appendChild(list); // Add the list of files/directories to the div
     }).catch(function(error) {
-        console.error('Erro ao listar diretórios:', error); // Exibe erro no console
+        console.error('Error listing directories:', error); // Display the error in the console
     });
 }
 function startStopMachine(buttonSto, estado, UUID){
@@ -1534,23 +1534,23 @@ function startStopMachine(buttonSto, estado, UUID){
     }
 }
 
-// Função para extrair informações de uma máquina virtual específica
+// Function to extract information from a specific virtual machine
 function extrairInfoVM(info, chave) {
     var regex = new RegExp(chave + ':\\s*(.+?)\\s*(?:\n|$)', 'i');
     var match = info.match(regex);
-    return match ? match[1] : 'Não encontrado';
+    return match ? match[1] : 'Not found';
 }
 
 function machineInfoVM(info, chave) {
     var regex = new RegExp(chave + '=\\s*"?([^"\n]+)"?', 'i');
     var match = info.match(regex);
-    return match ? match[1] : 'Não encontrado';
+    return match ? match[1] : 'Not found';
 }
 
 function adicionarClassState(resultado, li) {
-    // Verifica se o estado é "running"
+    // Check if the state is "running"
     if (resultado.estado === "running") {
-        // Adiciona a classe ao <li>
+        // Add the class to the <li>
         li.classList.add('vm-item-running');
     }else{
         li.classList.remove('vm-item-running');
@@ -1562,15 +1562,15 @@ function dividirEstado(s) {
     var estado = "";
 
     if (index !== -1) {
-        estado = s.substring(0, index).trim(); // Obtém o estado removendo os espaços em branco no início e no final
+        estado = s.substring(0, index).trim(); // Get the state, removing leading and trailing whitespace
     } else {
-        estado = s.trim(); // Se "(since)" não for encontrado, assume que o estado é toda a string
+        estado = s.trim(); // If "(since)" is not found, assume the entire string is the state
     }
 
-    // Remove qualquer outro texto que possa estar no estado, deixando apenas o estado em si
+    // Remove any other text that may be present in the state, leaving only the state itself
     estado = estado.split(' ')[0];
 
     return { estado: estado };
 }
-// Chamar a função ao carregar a página
+// Call the function when the page loads
 window.onload = listarMaquinasVirtuais;
