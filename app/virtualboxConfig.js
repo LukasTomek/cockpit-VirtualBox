@@ -13,15 +13,13 @@ function maskValue(value) {
 }
 
 function getDomParser() {
-  // browser DOMParser
   if (typeof DOMParser !== 'undefined') {
     return {
       parseFromString: (str) => new DOMParser().parseFromString(str, 'application/xml')
     };
   }
-
-  // Node fallback using xmldom (install: npm install xmldom)
   try {
+    // Node fallback: install xmldom (npm install xmldom)
     // eslint-disable-next-line global-require
     const { DOMParser } = require('xmldom');
     return { parseFromString: (str) => new DOMParser().parseFromString(str, 'application/xml') };
@@ -36,7 +34,6 @@ function textFromAttr(node, attrName) {
   return a === null ? null : a;
 }
 
-// parse <Property name="..." value="..."/>
 function parseProperties(propsNode) {
   const out = {};
   if (!propsNode) return out;
@@ -77,7 +74,6 @@ function parseVirtualBoxMachineXml(xmlText) {
   // RemoteDisplay (VRDE)
   const remoteDisplayNodes = machineNode.getElementsByTagName('RemoteDisplay');
   if (remoteDisplayNodes && remoteDisplayNodes.length > 0) {
-    // there may be one RemoteDisplay under Hardware, but guard for any
     const rdNode = remoteDisplayNodes[0];
     const enabled = rdNode.getAttribute('enabled') === 'true';
     const vrdePropsNodes = rdNode.getElementsByTagName('VRDEProperties');
@@ -86,11 +82,9 @@ function parseVirtualBoxMachineXml(xmlText) {
       parsedProps = parseProperties(vrdePropsNodes[0]);
     }
 
-    // Map commonly-used properties to friendly keys
     const remoteDisplay = {
       enabled,
       rawProperties: parsedProps,
-      // friendly fields:
       securityMethod: parsedProps['Security/Method'] || null,
       serverCertificatePath: parsedProps['Security/ServerCertificate'] || null,
       serverPrivateKeyPath: parsedProps['Security/ServerPrivateKey'] || null,
@@ -98,8 +92,6 @@ function parseVirtualBoxMachineXml(xmlText) {
       vncPasswordMasked: parsedProps['VNCPassword'] ? maskValue(parsedProps['VNCPassword']) : null
     };
 
-    // Don't return raw secret values (only masked). Keep rawProperties for debugging if needed,
-    // but consumer should be careful with rawProperties since it may contain secrets.
     machine.remoteDisplay = remoteDisplay;
   }
 
@@ -108,7 +100,6 @@ function parseVirtualBoxMachineXml(xmlText) {
   if (usbNodes && usbNodes.length > 0) {
     const usbNode = usbNodes[0];
 
-    // controllers
     const controllersNode = usbNode.getElementsByTagName('Controllers');
     if (controllersNode && controllersNode.length > 0) {
       const controllers = controllersNode[0].getElementsByTagName('Controller');
@@ -121,7 +112,6 @@ function parseVirtualBoxMachineXml(xmlText) {
       }
     }
 
-    // device filters
     const filtersNode = usbNode.getElementsByTagName('DeviceFilters');
     if (filtersNode && filtersNode.length > 0) {
       const filters = filtersNode[0].getElementsByTagName('DeviceFilter');
@@ -136,21 +126,4 @@ function parseVirtualBoxMachineXml(xmlText) {
           manufacturer: textFromAttr(f, 'manufacturer'),
           product: textFromAttr(f, 'product'),
           serialNumber: textFromAttr(f, 'serialNumber'),
-          port: textFromAttr(f, 'port'),
-          remote: textFromAttr(f, 'remote') === '1' || textFromAttr(f, 'remote') === 'true'
-        });
-      }
-    }
-  }
-
-  return machine;
-}
-
-// Exports for CommonJS and ESM environments
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { parseVirtualBoxMachineXml, maskValue };
-} else {
-  // attach to window in browser
-  window.parseVirtualBoxMachineXml = parseVirtualBoxMachineXml;
-  window.maskValue = maskValue;
-}
+          port: text
